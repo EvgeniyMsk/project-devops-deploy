@@ -1,12 +1,33 @@
 # Project DevOps Deploy
 
-Bulletin board service.
+Bulletin board service: Spring Boot REST API, React Admin UI, image uploads (local filesystem or S3), and Spring Actuator for health and metrics.
 
 > **Fork policy**: this upstream repository is read-only. We do not review or merge pull requests and we do not accept infrastructure changes (Dockerfiles, Ansible roles, CI/CD workflows, etc.). To experiment or extend the project, fork it and work inside your own repository.
 
 The default `dev` profile uses an in-memory H2 database and seeds 10 sample bulletins through `DataInitializer`, so the API works immediately after startup.
 
 API documentation is available via Swagger UI at `http://localhost:8080/swagger-ui/index.html`.
+
+## Docker
+
+The multi-stage `Dockerfile` builds the frontend, embeds it into the Spring Boot JAR, and packages a minimal JRE image.
+
+After `make docker-build`, the expected artifact is a local Docker image:
+
+- **Name:** `project-devops-deploy:latest` (override with `DOCKER_IMAGE` / `DOCKER_TAG`)
+
+```bash
+make docker-build   # build the image
+make docker-run     # run the container (ports 8080 and 9090)
+```
+
+Or in one step: `make docker-start`.
+
+- App UI and API: `http://localhost:8080/`
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- Actuator: `http://localhost:9090/actuator/health`
+
+The container starts with the `dev` profile by default (in-memory H2). For production, pass `JAVA_OPTS` and database/S3 variables (see [Running in Docker](#running-in-docker) below).
 
 ## Project layout
 
@@ -136,12 +157,13 @@ See [Makefile](./Makefile)
 
 ### Running in Docker
 
-Pass JVM flags via `JAVA_OPTS`:
+Build and run via Makefile (see [Docker](#docker)), or pass JVM flags via `JAVA_OPTS`:
 
 ```bash
-docker run --rm -p 8080:8080 \
+docker run --rm -p 8080:8080 -p 9090:9090 \
   -e JAVA_OPTS="-Xms256m -Xmx512m -Dspring.profiles.active=prod" \
-  ...
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/bulletins \
+  project-devops-deploy:latest
 ```
 
 Useful JVM options:

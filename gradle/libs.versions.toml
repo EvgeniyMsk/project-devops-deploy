@@ -345,6 +345,7 @@ springBootStarterActuator = { module = "org.springframework.boot:spring-boot-sta
 springBootStarterSecurity = { module = "org.springframework.boot:spring-boot-starter-security", version.ref = "spring-boot-version" }
 springBootStarterOauth2ResourceServer = { module = "org.springframework.boot:spring-boot-starter-oauth2-resource-server", version.ref = "spring-boot-version" }
 springBootStarterTest = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot-version" }
+springBootStarterWebmvcTest = { module = "org.springframework.boot:spring-boot-starter-webmvc-test", version.ref = "spring-boot-version" }
 springBootDevtools = { module = "org.springframework.boot:spring-boot-devtools", version.ref = "spring-boot-version" }
 springBootConfigProcessor = { module = "org.springframework.boot:spring-boot-configuration-processor", version.ref = "spring-boot-version" }
 

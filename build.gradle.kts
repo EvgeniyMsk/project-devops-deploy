@@ -48,6 +48,7 @@ dependencies {
     // implementation "org.springframework.boot:spring-boot-starter"
     // testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation(libs.springBootStarterTest)
+    testImplementation(libs.springBootStarterWebmvcTest)
     testImplementation(libs.springSecurityTest)
     testImplementation(platform(libs.junitBom))
     testImplementation(libs.junitJupiter)

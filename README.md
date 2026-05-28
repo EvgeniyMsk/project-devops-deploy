@@ -1,5 +1,7 @@
 # Project DevOps Deploy
 
+![CI](https://github.com/EvgeniyMsk/project-devops-deploy/actions/workflows/ci.yml/badge.svg)
+
 Bulletin board service: Spring Boot REST API, React Admin UI, image uploads (local filesystem or S3), and Spring Actuator for health and metrics.
 
 > **Fork policy**: this upstream repository is read-only. We do not review or merge pull requests and we do not accept infrastructure changes (Dockerfiles, Ansible roles, CI/CD workflows, etc.). To experiment or extend the project, fork it and work inside your own repository.
@@ -7,6 +9,47 @@ Bulletin board service: Spring Boot REST API, React Admin UI, image uploads (loc
 The default `dev` profile uses an in-memory H2 database and seeds 10 sample bulletins through `DataInitializer`, so the API works immediately after startup.
 
 API documentation is available via Swagger UI at `http://localhost:8080/swagger-ui/index.html`.
+
+## CI/CD
+
+GitHub Actions workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every **push** and **pull request** to `main`.
+
+Pipeline steps:
+
+1. **Backend** — install Gradle dependencies, run tests, check code style (`spotlessCheck`).
+2. **Frontend** — `npm ci`, production build.
+3. **Docker** — build and push the image to the container registry **only after** backend and frontend jobs succeed, and **only on push to `main`** (not on pull requests).
+
+### Image tagging
+
+Each successful push to `main` publishes two tags:
+
+| Tag | Example | Purpose |
+|-----|---------|---------|
+| `latest` | `cr.yandex/crpragsrepkuej79fefp/project-devops-deploy:latest` | always points to the last successful build |
+| git SHA | `cr.yandex/crpragsrepkuej79fefp/project-devops-deploy:abc1234…` | immutable reference to a specific commit |
+
+Use the SHA tag when you need to roll back or audit a deployment.
+
+### Registry credentials (GitHub Secrets)
+
+Do **not** commit tokens or passwords to the repository. Configure these secrets in the repository settings (`Settings → Secrets and variables → Actions`):
+
+| Secret | Description |
+|--------|-------------|
+| `DOCKER_USERNAME` | Registry username (`oauth` for Yandex Container Registry) |
+| `DOCKER_PASSWORD` | OAuth token or registry password |
+
+Local login example (replace `<YOUR_OAUTH_TOKEN>` with a token from Yandex Cloud):
+
+```bash
+echo "<YOUR_OAUTH_TOKEN>" | docker login \
+  --username oauth \
+  --password-stdin \
+  cr.yandex
+
+docker push cr.yandex/crpragsrepkuej79fefp/project-devops-deploy:latest
+```
 
 ## Docker
 

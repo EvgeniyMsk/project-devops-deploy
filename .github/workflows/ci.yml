@@ -67,6 +67,7 @@ jobs:
       - backend
       - frontend
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
 
     steps:
       - name: Checkout

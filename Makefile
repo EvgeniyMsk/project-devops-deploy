@@ -35,4 +35,7 @@ docker-run:
 
 docker-start: docker-build docker-run
 
+deploy:
+	ansible all -m ping
+
 .PHONY: test start run update-gradle update-deps install build lint lint-fix docker-build docker-run docker-start

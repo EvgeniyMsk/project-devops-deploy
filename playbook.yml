@@ -1,0 +1,147 @@
+---
+- name: Install and start Docker
+  hosts: main
+  become: yes
+  
+  vars:
+    docker_compose_version: "v5.1.4"
+    docker_user: "user"
+    docker_compose_path: "/usr/local/bin/docker-compose"
+    
+  tasks:
+    - name: Install docker.io package (official Ubuntu package)
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+        cache_valid_time: 3600
+        
+    - name: Enable and start Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+        masked: no
+        
+    - name: Enable and start docker.socket
+      systemd:
+        name: docker.socket
+        enabled: yes
+        state: started
+        masked: no
+        
+    - name: Check if docker-compose already exists
+      stat:
+        path: "{{ docker_compose_path }}"
+      register: docker_compose_check
+      
+    - name: Download and install docker-compose (idempotent)
+      ansible.builtin.get_url:
+        url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-linux-x86_64"
+        dest: "{{ docker_compose_path }}"
+        mode: "0755"
+        owner: root
+        group: root
+        force: no
+      when: not docker_compose_check.stat.exists
+      
+    - name: Verify docker-compose version
+      command: "{{ docker_compose_path }} --version"
+      register: compose_version_check
+      changed_when: false
+      
+    - name: Update docker-compose if version mismatch
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-linux-x86_64"
+        dest: "{{ docker_compose_path }}"
+        mode: "0755"
+        owner: root
+        group: root
+        force: yes
+      when: 
+        - docker_compose_version not in compose_version_check.stdout
+        - compose_version_check is defined
+        
+    - name: Ensure docker group exists
+      group:
+        name: docker
+        state: present
+        
+    - name: Ensure docker user exists
+      user:
+        name: "{{ docker_user }}"
+        state: present
+        create_home: yes
+        shell: /bin/bash
+        
+    - name: Add user to docker group (idempotent)
+      user:
+        name: "{{ docker_user }}"
+        groups: docker
+        append: yes
+        
+    - name: Check if user is already in docker group
+      command: groups "{{ docker_user }}"
+      register: user_groups
+      changed_when: false
+      
+    - name: Display docker group membership
+      debug:
+        msg: "User {{ docker_user }} is in groups: {{ user_groups.stdout }}"
+        
+    - name: Install UFW firewall
+      apt:
+        name: ufw
+        state: present
+      when: ansible_os_family == "Debian"
+      
+    - name: Check UFW status before changes
+      command: ufw status
+      register: ufw_before_status
+      changed_when: false
+      when: ansible_os_family == "Debian"
+      
+    - name: Configure UFW default policies (only if changed)
+      ufw:
+        direction: incoming
+        policy: deny
+        state: enabled
+      register: ufw_default
+      
+    - name: Allow SSH (port 22) - idempotent
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+      register: ufw_ssh
+      
+    - name: Allow HTTP (port 80) - idempotent
+      ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+      register: ufw_http
+      
+    - name: Allow HTTPS (port 443) - idempotent
+      ufw:
+        rule: allow
+        port: '443'
+        proto: tcp
+      register: ufw_https
+      
+    - name: Enable firewall (only if not already enabled)
+      ufw:
+        state: enabled
+      register: ufw_enable
+      when: ansible_os_family == "Debian"
+      
+    - name: Display UFW changes summary
+      debug:
+        msg: |
+          UFW Changes:
+          - Default policy: {{ 'changed' if ufw_default.changed else 'ok' }}
+          - SSH rule: {{ 'changed' if ufw_ssh.changed else 'ok' }}
+          - HTTP rule: {{ 'changed' if ufw_http.changed else 'ok' }}
+          - HTTPS rule: {{ 'changed' if ufw_https.changed else 'ok' }}
+          - UFW enabled: {{ 'changed' if ufw_enable.changed else 'ok' }}
+      when: ansible_os_family == "Debian"

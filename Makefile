@@ -35,7 +35,10 @@ docker-run:
 
 docker-start: docker-build docker-run
 
-deploy:
-	ansible all -m ping
+setup:
+	ansible-playbook playbook.yml --ask-vault-pass
 
-.PHONY: test start run update-gradle update-deps install build lint lint-fix docker-build docker-run docker-start
+deploy:
+	ansible-playbook playbook.yml -t deploy --ask-vault-pass
+
+.PHONY: test start run update-gradle update-deps install build lint lint-fix docker-build docker-run docker-start setup deploy

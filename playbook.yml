@@ -7,6 +7,9 @@
     docker_compose_version: "v5.1.4"
     docker_user: "user"
     docker_compose_path: "/usr/local/bin/docker-compose"
+    docker_image: "cr.yandex/crpragsrepkuej79fefp/project-devops-deploy"
+    docker_tag: "latest"
+    app_deploy_dir: "/home/{{ docker_user }}/project-devops-deploy"
     
   tasks:
     - name: Install docker.io package (official Ubuntu package)
@@ -145,3 +148,41 @@
           - HTTPS rule: {{ 'changed' if ufw_https.changed else 'ok' }}
           - UFW enabled: {{ 'changed' if ufw_enable.changed else 'ok' }}
       when: ansible_os_family == "Debian"
+
+    - name: Load secrets
+      ansible.builtin.include_vars:
+        file: secret.yml
+      tags: deploy
+
+    - name: Ensure deploy directory exists
+      ansible.builtin.file:
+        path: "{{ app_deploy_dir }}"
+        state: directory
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+        mode: "0755"
+      tags: deploy
+
+    - name: Deploy docker-compose file
+      ansible.builtin.template:
+        src: templates/docker-compose.yml.j2
+        dest: "{{ app_deploy_dir }}/docker-compose.yml"
+        owner: "{{ docker_user }}"
+        group: "{{ docker_user }}"
+        mode: "0644"
+      tags: deploy
+
+    - name: Log in to container registry
+      become_user: "{{ docker_user }}"
+      ansible.builtin.shell: >
+        echo "{{ docker_password }}" |
+        docker login --username {{ docker_username }} --password-stdin cr.yandex
+      changed_when: false
+      no_log: true
+      tags: deploy
+
+    - name: Start application with docker-compose
+      become_user: "{{ docker_user }}"
+      ansible.builtin.command:
+        cmd: "{{ docker_compose_path }} -f {{ app_deploy_dir }}/docker-compose.yml up -d --pull always --remove-orphans"
+      tags: deploy

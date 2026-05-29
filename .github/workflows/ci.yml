@@ -8,10 +8,6 @@ on:
     branches:
       - main
 
-env:
-  REGISTRY: cr.yandex
-  IMAGE_NAME: crpragsrepkuej79fefp/project-devops-deploy
-
 jobs:
   backend:
     name: Backend

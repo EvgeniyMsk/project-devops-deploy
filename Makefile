@@ -36,9 +36,17 @@ docker-run:
 docker-start: docker-build docker-run
 
 setup:
+ifneq ($(strip $(VAULT_PASS_FILE)),)
+	ansible-playbook playbook.yml --vault-password-file $(VAULT_PASS_FILE)
+else
 	ansible-playbook playbook.yml --ask-vault-pass
+endif
 
 deploy:
+ifneq ($(strip $(VAULT_PASS_FILE)),)
+	ansible-playbook playbook.yml -t deploy --vault-password-file $(VAULT_PASS_FILE)
+else
 	ansible-playbook playbook.yml -t deploy --ask-vault-pass
+endif
 
 .PHONY: test start run update-gradle update-deps install build lint lint-fix docker-build docker-run docker-start setup deploy

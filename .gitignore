@@ -36,3 +36,19 @@ out/
 ### VS Code ###
 .vscode/
 *.db
+
+### Node.js ###
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+### Ansible / secrets ###
+.vault_pass
+vault_pass.txt
+*.vault_pass
+
+### Local notes ###
+project_requirements.txt
+
+### macOS ###
+.DS_Store

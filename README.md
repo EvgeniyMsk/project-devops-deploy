@@ -38,9 +38,18 @@ Each successful push to `main` publishes two tags:
 
 Use the SHA tag when you need to roll back or audit a deployment (redeploy from the Ansible repository).
 
+### Если CI не запускается (fork)
+
+Репозиторий — **fork**. GitHub по умолчанию **отключает Actions** в форках. Включите вручную:
+
+1. Откройте [Settings → Actions → General](https://github.com/EvgeniyMsk/project-devops-deploy/settings/actions).
+2. В разделе **Actions permissions** выберите **Allow all actions and reusable workflows**.
+3. Нажмите **Save**.
+4. Сделайте push в `main` или запустите workflow вручную: **Actions → CI → Run workflow**.
+
 ### Registry credentials (GitHub Secrets)
 
-Do **not** commit tokens or passwords to the repository. Configure these secrets in the **production** environment (`Settings → Environments → production → Environment secrets`):
+Do **not** commit tokens or passwords to the repository. Добавьте секреты в **Settings → Secrets and variables → Actions → Repository secrets**:
 
 | Secret | Description |
 |--------|-------------|

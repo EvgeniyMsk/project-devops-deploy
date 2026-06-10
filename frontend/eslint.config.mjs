@@ -8,32 +8,30 @@ import globals from "globals";
 
 export default defineConfig([
   globalIgnores(["**/node_modules", "**/dist"]),
-  {
-    name: "eslint-js-recommended-rules",
-    plugins: {
-      js,
-    },
-    extends: ["js/recommended"],
-  },
-  tseslint.configs.recommended.map((conf) => ({
+  js.configs.recommended,
+  ...tseslint.configs.recommended.map((conf) => ({
     ...conf,
     files: ["**/*.ts", "**/*.tsx"],
   })),
   eslintPluginPrettierRecommended,
   {
-    name: "react",
     ...react.configs.flat.recommended,
+    files: ["**/*.{js,jsx,ts,tsx}"],
   },
-  reactHooks.configs["recommended-latest"],
   {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    plugins: {
+      "react-hooks": reactHooks,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      "react/react-in-jsx-scope": "off",
+    },
     languageOptions: {
       globals: {
         ...globals.browser,
         ...globals.node,
       },
-    },
-    rules: {
-      "react/react-in-jsx-scope": "off",
     },
     settings: {
       react: {

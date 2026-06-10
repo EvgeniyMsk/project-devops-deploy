@@ -14,7 +14,7 @@ permissions:
 
 env:
   REGISTRY: cr.yandex
-  IMAGE: cr.yandex/crpragsrepkuej79fefp/project-devops-deploy
+  IMAGE: cr.yandex/crpd2isbgl7k3puo75s1/project-devops-deploy
 
 jobs:
   backend:
